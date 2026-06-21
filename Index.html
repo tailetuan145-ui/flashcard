@@ -3,124 +3,514 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flashcards theo Unit</title>
+<title>Thư viện Word Bank Cao Cấp</title>
 <style>
+  /* Cài đặt chung & Biến màu sắc */
+  :root {
+    --bg-color: transparent;
+    /* Khung màu trắng hơi trong suốt để hiện ảnh nền (Glassmorphism) */
+    --app-bg: rgba(255, 255, 255, 0.85); 
+    --text-color: #333333;
+    --title-color: #1a73e8;
+    --card-bg: #ffffff;
+    --border-color: rgba(224, 224, 224, 0.8);
+    --toolbar-border: rgba(240, 240, 240, 0.8);
+    --btn-back-bg: rgba(241, 243, 244, 0.9);
+    --btn-back-hover: #e8eaed;
+  }
+
+  body.dark-mode {
+    /* Khung màu đen hơi trong suốt cho Dark Mode */
+    --app-bg: rgba(30, 30, 30, 0.85);
+    --text-color: #f5f5f5;
+    --title-color: #66b2ff;
+    --card-bg: #2d2d2d;
+    --border-color: #444444;
+    --toolbar-border: #333333;
+    --btn-back-bg: #333333;
+    --btn-back-hover: #444444;
+  }
+
   body {
+    background-color: var(--bg-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+    /* Đảm bảo ảnh nền không bị lặp lại và bao phủ toàn màn hình */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  .app-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--app-bg);
+    /* Hiệu ứng làm mờ nền phía sau (Chỉ hoạt động trên các trình duyệt hiện đại) */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    padding: 30px;
+    min-height: 500px;
+    position: relative;
+    transition: all 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  h1 {
+    text-align: center;
+    color: var(--title-color);
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-size: 32px;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    background-color: transparent;
-    font-family: Arial, sans-serif;
+  }
+  .theme-toggle:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  /* --- MENU --- */
+  .unit-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+
+  .unit-btn {
+    background: linear-gradient(135deg, rgba(66, 133, 244, 0.9), rgba(52, 168, 83, 0.9));
+    color: white;
+    border: none;
+    padding: 25px 10px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 15px rgba(66, 133, 244, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    backdrop-filter: blur(5px);
+  }
+
+  .unit-btn:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(66, 133, 244, 0.4);
+  }
+
+  /* --- MÀN HÌNH WORD BANK --- */
+  .word-bank-view {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--toolbar-border);
+    padding-bottom: 15px;
+  }
+
+  .back-btn {
+    background-color: var(--btn-back-bg);
+    color: var(--text-color);
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+    margin-right: 20px;
+  }
+
+  .back-btn:hover {
+    background-color: var(--btn-back-hover);
+    transform: translateX(-3px);
+  }
+
+  .unit-title {
+    font-size: 26px;
+    color: var(--title-color);
+    font-weight: bold;
     margin: 0;
   }
-  /* Bộ chọn Unit */
-  .selector-container {
-    margin-bottom: 20px;
+
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
   }
-  select {
-    padding: 8px 15px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-  }
-  .scene {
-    width: 300px;
-    height: 400px; 
-    perspective: 600px;
-  }
-  .card {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transition: transform 0.6s;
-    transform-style: preserve-3d;
-    cursor: pointer;
-  }
-  .card.is-flipped {
-    transform: rotateY(180deg);
-  }
-  .card__face {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    border-radius: 15px;
+
+  .image-card {
+    background: var(--card-bg);
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    border: 1px solid #ddd;
-    background: #fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-color);
+    height: 240px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 18px;
-    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 10px;
   }
-  .card__face img {
+
+  .image-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+    border-color: #4285f4;
+  }
+
+  .image-card img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
-  .card__face--back {
-    transform: rotateY(180deg);
+
+  .empty-state {
+    text-align: center;
+    color: #888;
+    font-size: 18px;
+    width: 100%;
+    padding: 60px 0;
+  }
+
+  /* --- LIGHTBOX (Phóng to & Chuyển ảnh) --- */
+  .lightbox {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s;
+  }
+
+  .lightbox-counter {
+    position: absolute;
+    top: 25px;
+    left: 30px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 15px;
+    border-radius: 20px;
+  }
+
+  .lightbox img {
+    max-width: 80%;
+    max-height: 85%;
+    border-radius: 10px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    user-select: none;
+  }
+
+  .close-lightbox {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .close-lightbox:hover {
+    color: #ff5252;
+  }
+
+  .nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    font-size: 30px;
+    padding: 15px 20px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.3s, transform 0.2s;
+    user-select: none;
+  }
+
+  .nav-arrow:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .prev-arrow { left: 20px; }
+  .next-arrow { right: 20px; }
+
+  #backToTopBtn {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 90;
+    border: none;
+    background-color: #4285f4;
+    color: white;
+    cursor: pointer;
+    padding: 15px;
+    border-radius: 50%;
+    font-size: 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: 0.3s;
+  }
+  #backToTopBtn:hover {
+    background-color: #3367d6;
+    transform: scale(1.1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 600px) {
+    .nav-arrow { padding: 10px 15px; font-size: 20px; }
+    .prev-arrow { left: 10px; }
+    .next-arrow { right: 10px; }
+    .lightbox img { max-width: 95%; }
+    .theme-toggle { right: 15px; top: 15px; width: 40px; height: 40px; }
   }
 </style>
 </head>
 <body>
 
-<div class="selector-container">
-  <label for="unit-select">Chọn bài học: </label>
-  <select id="unit-select" onchange="changeUnit(this.value)">
-    <option value="1">Unit 1 (Chưa cập nhật)</option>
-    <option value="2" selected>Unit 2 (Đang xem)</option> <option value="3">Unit 3 (Chưa cập nhật)</option>
-    </select>
+<div class="app-container">
+  
+  <button class="theme-toggle" id="theme-btn" onclick="toggleDarkMode()" title="Chuyển đổi Sáng/Tối">🌙</button>
+
+  <div id="menu-screen">
+    <h1>📚 Thư viện Word Bank</h1>
+    <div class="unit-menu" id="unit-menu"></div>
+  </div>
+
+  <div id="wordbank-screen" class="word-bank-view">
+    <div class="toolbar">
+      <button class="back-btn" onclick="goBack()">⬅ Quay lại</button>
+      <h2 class="unit-title" id="current-unit-title">Unit ...</h2>
+    </div>
+    <div class="image-grid" id="image-grid"></div>
+  </div>
+
 </div>
 
-<div class="scene">
-  <div class="card" id="flashcard" onclick="this.classList.toggle('is-flipped')">
-    <div class="card__face card__face--front">
-      <img id="img-front" src="u2-truoc.jpg" alt="Mặt trước">
-    </div>
-    <div class="card__face card__face--back">
-      <img id="img-sau" src="u2-sau.jpg" alt="Mặt sau">
-    </div>
-  </div>
+<div id="lightbox" class="lightbox" onclick="closeLightboxOnBackground(event)">
+  <div class="lightbox-counter" id="lightbox-counter">1 / 1</div>
+  <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+  
+  <button class="nav-arrow prev-arrow" onclick="changeImage(-1)">&#10094;</button>
+  <img id="lightbox-img" src="" alt="Zoomed Image">
+  <button class="nav-arrow next-arrow" onclick="changeImage(1)">&#10095;</button>
 </div>
+
+<button onclick="scrollToTop()" id="backToTopBtn" title="Lên đầu trang">⬆️</button>
 
 <script>
-  // Cấu hình đường dẫn ảnh cho từng Unit tại đây
-  const unitData = {
-    "1": { front: "u1-truoc.jpg", back: "u1-sau.jpg", placeholder: "Nội dung Unit 1 chưa sẵn sàng" },
-    "2": { front: "u2-truoc.jpg", back: "u2-sau.jpg", placeholder: "" },
-    "3": { front: "u3-truoc.jpg", back: "u3-sau.jpg", placeholder: "Nội dung Unit 3 chưa sẵn sàng" }
-    // Khi nào có Unit mới, bạn chỉ cần thêm dòng vào đây. Ví dụ: "4": { front: "u4-truoc.jpg", back: "u4-sau.jpg" }
+  // ======================================================================
+  // 1. CẤU HÌNH ẢNH NỀN TỔNG THỂ CỦA TRANG
+  // ======================================================================
+  // Điền tên file ảnh nền vào giữa 2 dấu ngoặc kép. 
+  // Ví dụ: "hinh-nen.jpg". Nếu chưa muốn dùng, cứ để trống ""
+  const tenAnhNen = ""; 
+
+  // Tự động áp dụng ảnh nền nếu bạn có điền tên
+  if (tenAnhNen !== "") {
+    document.body.style.backgroundImage = `url('${tenAnhNen}')`;
+  }
+
+  // ======================================================================
+  // 2. CẤU HÌNH DANH SÁCH ẢNH WORD BANK
+  // ======================================================================
+  function taoDanhSachAnh(soLuong) {
+    let danhSach = [];
+    for (let i = 1; i <= soLuong; i++) {
+      danhSach.push(encodeURI(`Flash card/${i}.png`)); 
+    }
+    return danhSach;
+  }
+
+  const wordBankData = {
+    1: [], 
+    2: taoDanhSachAnh(68),
+    3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: []
   };
 
-  function changeUnit(unitNumber) {
-    const card = document.getElementById('flashcard');
-    const imgFront = document.getElementById('img-front');
-    const imgSau = document.getElementById('img-sau');
-    
-    // Trở về mặt trước trước khi đổi ảnh
-    card.classList.remove('is-flipped');
-    
-    // Đợi hiệu ứng lật ẩn đi rồi mới đổi ảnh (khoảng 0.3s)
-    setTimeout(() => {
-      const data = unitData[unitNumber];
+  // ======================================================================
+  // CÁC TÍNH NĂNG HOẠT ĐỘNG
+  // ======================================================================
+  const menuScreen = document.getElementById('menu-screen');
+  const wordbankScreen = document.getElementById('wordbank-screen');
+  const unitMenuContainer = document.getElementById('unit-menu');
+  const imageGrid = document.getElementById('image-grid');
+  const currentUnitTitle = document.getElementById('current-unit-title');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxCounter = document.getElementById('lightbox-counter');
+  const backToTopBtn = document.getElementById("backToTopBtn");
+
+  let currentImagesList = [];
+  let currentImageIndex = 0;
+
+  function initMenu() {
+    for (let i = 1; i <= 12; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'unit-btn';
+      btn.innerText = `Unit ${i}`;
+      btn.onclick = () => openUnit(i);
       
-      if(data && data.placeholder === "") {
-        // Nếu đã có ảnh cho Unit đó
-        imgFront.parentElement.innerHTML = `<img id="img-front" src="${data.front}" alt="Mặt trước">`;
-        imgSau.parentElement.innerHTML = `<img id="img-sau" src="${data.back}" alt="Mặt sau">`;
-      } else {
-        // Nếu chưa có ảnh (Unit chưa cập nhật)
-        imgFront.parentElement.innerHTML = `<div style="padding:20px; text-align:center;">${data ? data.placeholder : 'Chưa có dữ liệu'}</div>`;
-        imgSau.parentElement.innerHTML = `<div style="padding:20px; text-align:center;">Vui lòng quay lại sau!</div>`;
+      if (!wordBankData[i] || wordBankData[i].length === 0) {
+        btn.style.background = 'linear-gradient(135deg, rgba(176, 190, 197, 0.8), rgba(144, 164, 174, 0.8))';
+        btn.style.boxShadow = 'none';
+        btn.style.color = '#f5f5f5';
       }
-    }, 300);
+      unitMenuContainer.appendChild(btn);
+    }
   }
+
+  function openUnit(unitNumber) {
+    currentUnitTitle.innerText = `Word Bank - Unit ${unitNumber}`;
+    imageGrid.innerHTML = '';
+    currentImagesList = wordBankData[unitNumber] || [];
+
+    if (currentImagesList.length === 0) {
+      imageGrid.innerHTML = `<div class="empty-state">Chưa có từ vựng nào cho Unit ${unitNumber}. Bạn quay lại sau nhé! 🚧</div>`;
+    } else {
+      currentImagesList.forEach((imgSrc, index) => {
+        const card = document.createElement('div');
+        card.className = 'image-card';
+        card.onclick = () => openLightbox(index);
+        
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.alt = `Từ vựng Unit ${unitNumber}`;
+        img.loading = "lazy";
+        
+        img.onerror = function() {
+          this.onerror = null;
+          this.src = "https://via.placeholder.com/200x200?text=Lỗi+Ảnh";
+        };
+
+        card.appendChild(img);
+        imageGrid.appendChild(card);
+      });
+    }
+
+    menuScreen.style.display = 'none';
+    wordbankScreen.style.display = 'block';
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function goBack() {
+    wordbankScreen.style.display = 'none';
+    menuScreen.style.display = 'block';
+  }
+
+  function openLightbox(index) {
+    currentImageIndex = index;
+    updateLightboxContent();
+    lightbox.style.display = "flex";
+  }
+
+  function changeImage(direction) {
+    currentImageIndex += direction;
+    if (currentImageIndex >= currentImagesList.length) {
+      currentImageIndex = 0;
+    } else if (currentImageIndex < 0) {
+      currentImageIndex = currentImagesList.length - 1;
+    }
+    updateLightboxContent();
+  }
+
+  function updateLightboxContent() {
+    lightboxImg.src = currentImagesList[currentImageIndex];
+    lightboxCounter.innerText = `${currentImageIndex + 1} / ${currentImagesList.length}`;
+  }
+
+  function closeLightbox() {
+    lightbox.style.display = "none";
+    lightboxImg.src = "";
+  }
+
+  function closeLightboxOnBackground(event) {
+    if (event.target === lightbox) {
+      closeLightbox();
+    }
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (lightbox.style.display === "flex") {
+      if (event.key === "ArrowRight") {
+        changeImage(1);
+      } else if (event.key === "ArrowLeft") {
+        changeImage(-1);
+      } else if (event.key === "Escape") {
+        closeLightbox();
+      }
+    }
+  });
+
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const themeBtn = document.getElementById('theme-btn');
+    if (document.body.classList.contains('dark-mode')) {
+      themeBtn.innerText = '☀️';
+      themeBtn.title = 'Chuyển sang nền Sáng';
+    } else {
+      themeBtn.innerText = '🌙';
+      themeBtn.title = 'Chuyển sang nền Tối';
+    }
+  }
+
+  window.onscroll = function() {
+    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+      backToTopBtn.style.display = "block";
+    } else {
+      backToTopBtn.style.display = "none";
+    }
+  };
+
+  function scrollToTop() {
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  initMenu();
 </script>
 
 </body>
