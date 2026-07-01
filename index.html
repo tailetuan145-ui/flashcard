@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thư viện Word Bank Cao Cấp</title>
+<title>Vocabulary Bank</title>
 <style>
   /* Cài đặt chung & Biến màu sắc */
   :root {
     --bg-color: transparent;
-    /* Khung màu trắng hơi trong suốt để hiện ảnh nền (Glassmorphism) */
     --app-bg: rgba(255, 255, 255, 0.85); 
     --text-color: #333333;
     --title-color: #1a73e8;
@@ -20,7 +19,6 @@
   }
 
   body.dark-mode {
-    /* Khung màu đen hơi trong suốt cho Dark Mode */
     --app-bg: rgba(30, 30, 30, 0.85);
     --text-color: #f5f5f5;
     --title-color: #66b2ff;
@@ -38,7 +36,6 @@
     padding: 20px;
     color: var(--text-color);
     transition: background-color 0.3s, color 0.3s;
-    /* Đảm bảo ảnh nền không bị lặp lại và bao phủ toàn màn hình */
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -49,7 +46,6 @@
     max-width: 1100px;
     margin: 0 auto;
     background: var(--app-bg);
-    /* Hiệu ứng làm mờ nền phía sau (Chỉ hoạt động trên các trình duyệt hiện đại) */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: 24px;
@@ -71,24 +67,43 @@
     text-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
 
-  .theme-toggle {
+  /* Container cho các nút góc phải */
+  .top-right-controls {
     position: absolute;
     top: 20px;
     right: 30px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+  }
+
+  .theme-toggle, .lang-toggle {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 50%;
-    width: 45px;
     height: 45px;
-    font-size: 20px;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
     justify-content: center;
     align-items: center;
+    color: var(--text-color);
+    font-weight: bold;
+    border-radius: 25px;
   }
-  .theme-toggle:hover {
-    transform: scale(1.1);
+
+  .theme-toggle {
+    width: 45px;
+    border-radius: 50%;
+    font-size: 20px;
+  }
+
+  .lang-toggle {
+    padding: 0 15px;
+    font-size: 14px;
+  }
+
+  .theme-toggle:hover, .lang-toggle:hover {
+    transform: scale(1.05);
     background: rgba(255, 255, 255, 0.4);
   }
 
@@ -200,7 +215,7 @@
     padding: 60px 0;
   }
 
-  /* --- LIGHTBOX (Phóng to & Chuyển ảnh) --- */
+  /* --- LIGHTBOX --- */
   .lightbox {
     display: none;
     position: fixed;
@@ -306,7 +321,9 @@
     .prev-arrow { left: 10px; }
     .next-arrow { right: 10px; }
     .lightbox img { max-width: 95%; }
-    .theme-toggle { right: 15px; top: 15px; width: 40px; height: 40px; }
+    .top-right-controls { right: 15px; top: 15px; }
+    .theme-toggle, .lang-toggle { height: 40px; }
+    .theme-toggle { width: 40px; }
   }
 </style>
 </head>
@@ -314,16 +331,19 @@
 
 <div class="app-container">
   
-  <button class="theme-toggle" id="theme-btn" onclick="toggleDarkMode()" title="Chuyển đổi Sáng/Tối">🌙</button>
+  <div class="top-right-controls">
+    <button class="lang-toggle" id="lang-btn" onclick="toggleLanguage()">🌐 Translate / Dịch</button>
+    <button class="theme-toggle" id="theme-btn" onclick="toggleDarkMode()" title="Toggle Light/Dark Mode">🌙</button>
+  </div>
 
   <div id="menu-screen">
-    <h1>📚 Thư viện Word Bank</h1>
+    <h1 id="main-title">📚 Vocabulary Bank</h1>
     <div class="unit-menu" id="unit-menu"></div>
   </div>
 
   <div id="wordbank-screen" class="word-bank-view">
     <div class="toolbar">
-      <button class="back-btn" onclick="goBack()">⬅ Quay lại</button>
+      <button class="back-btn" id="back-btn" onclick="goBack()">⬅ Back</button>
       <h2 class="unit-title" id="current-unit-title">Unit ...</h2>
     </div>
     <div class="image-grid" id="image-grid"></div>
@@ -340,23 +360,51 @@
   <button class="nav-arrow next-arrow" onclick="changeImage(1)">&#10095;</button>
 </div>
 
-<button onclick="scrollToTop()" id="backToTopBtn" title="Lên đầu trang">⬆️</button>
+<button onclick="scrollToTop()" id="backToTopBtn" title="Back to top">⬆️</button>
 
 <script>
   // ======================================================================
-  // 1. CẤU HÌNH ẢNH NỀN TỔNG THỂ CỦA TRANG
+  // 1. TỪ ĐIỂN ĐA NGÔN NGỮ (LANGUAGE DICTIONARY)
   // ======================================================================
-  // Điền tên file ảnh nền vào giữa 2 dấu ngoặc kép. 
-  // Ví dụ: "hinh-nen.jpg". Nếu chưa muốn dùng, cứ để trống ""
+  const i18n = {
+    en: {
+      title: "📚 Vocabulary Bank",
+      backBtn: "⬅ Back",
+      emptyState: "No vocabulary for Unit {unit} yet. Come back later! 🚧",
+      unitTitlePrefix: "Vocabulary Bank - Unit ",
+      themeLight: "Switch to Light Mode",
+      themeDark: "Switch to Dark Mode",
+      langBtn: "🌐 Translate / Dịch",
+      backToTop: "Back to top",
+      imgError: "Image Error"
+    },
+    vi: {
+      title: "📚 Thư viện Từ vựng",
+      backBtn: "⬅ Quay lại",
+      emptyState: "Chưa có từ vựng nào cho Unit {unit}. Bạn quay lại sau nhé! 🚧",
+      unitTitlePrefix: "Thư viện Từ vựng - Unit ",
+      themeLight: "Chuyển sang nền Sáng",
+      themeDark: "Chuyển sang nền Tối",
+      langBtn: "🌐 Translate / Dịch",
+      backToTop: "Lên đầu trang",
+      imgError: "Lỗi Ảnh"
+    }
+  };
+
+  let currentLang = 'en'; // Ngôn ngữ mặc định
+  let activeUnit = null;  // Lưu lại Unit đang mở để dịch lại nội dung bên trong
+
+  // ======================================================================
+  // 2. CẤU HÌNH ẢNH NỀN TỔNG THỂ CỦA TRANG
+  // ======================================================================
   const tenAnhNen = ""; 
 
-  // Tự động áp dụng ảnh nền nếu bạn có điền tên
   if (tenAnhNen !== "") {
     document.body.style.backgroundImage = `url('${tenAnhNen}')`;
   }
 
   // ======================================================================
-  // 2. CẤU HÌNH DANH SÁCH ẢNH WORD BANK
+  // 3. CẤU HÌNH DANH SÁCH ẢNH WORD BANK
   // ======================================================================
   function taoDanhSachAnh(soLuong) {
     let danhSach = [];
@@ -384,11 +432,14 @@
   const lightboxImg = document.getElementById('lightbox-img');
   const lightboxCounter = document.getElementById('lightbox-counter');
   const backToTopBtn = document.getElementById("backToTopBtn");
+  const themeBtn = document.getElementById('theme-btn');
+  const langBtn = document.getElementById('lang-btn');
 
   let currentImagesList = [];
   let currentImageIndex = 0;
 
   function initMenu() {
+    unitMenuContainer.innerHTML = '';
     for (let i = 1; i <= 12; i++) {
       const btn = document.createElement('button');
       btn.className = 'unit-btn';
@@ -405,12 +456,14 @@
   }
 
   function openUnit(unitNumber) {
-    currentUnitTitle.innerText = `Word Bank - Unit ${unitNumber}`;
+    activeUnit = unitNumber;
+    currentUnitTitle.innerText = `${i18n[currentLang].unitTitlePrefix}${unitNumber}`;
     imageGrid.innerHTML = '';
     currentImagesList = wordBankData[unitNumber] || [];
 
     if (currentImagesList.length === 0) {
-      imageGrid.innerHTML = `<div class="empty-state">Chưa có từ vựng nào cho Unit ${unitNumber}. Bạn quay lại sau nhé! 🚧</div>`;
+      let emptyText = i18n[currentLang].emptyState.replace("{unit}", unitNumber);
+      imageGrid.innerHTML = `<div class="empty-state">${emptyText}</div>`;
     } else {
       currentImagesList.forEach((imgSrc, index) => {
         const card = document.createElement('div');
@@ -419,12 +472,12 @@
         
         const img = document.createElement('img');
         img.src = imgSrc;
-        img.alt = `Từ vựng Unit ${unitNumber}`;
+        img.alt = `Vocabulary Unit ${unitNumber}`;
         img.loading = "lazy";
         
         img.onerror = function() {
           this.onerror = null;
-          this.src = "https://via.placeholder.com/200x200?text=Lỗi+Ảnh";
+          this.src = `https://via.placeholder.com/200x200?text=${i18n[currentLang].imgError}`;
         };
 
         card.appendChild(img);
@@ -434,14 +487,52 @@
 
     menuScreen.style.display = 'none';
     wordbankScreen.style.display = 'block';
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    if (!lightbox.style.display || lightbox.style.display === 'none') {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
   }
 
   function goBack() {
+    activeUnit = null;
     wordbankScreen.style.display = 'none';
     menuScreen.style.display = 'block';
   }
 
+  function toggleLanguage() {
+    // Chuyển đổi ngôn ngữ
+    currentLang = currentLang === 'en' ? 'vi' : 'en';
+    
+    // Cập nhật text trên UI
+    document.getElementById('main-title').innerText = i18n[currentLang].title;
+    document.getElementById('back-btn').innerText = i18n[currentLang].backBtn;
+    langBtn.innerText = i18n[currentLang].langBtn;
+    backToTopBtn.title = i18n[currentLang].backToTop;
+    
+    // Cập nhật lại title của nút Sáng/Tối
+    if (document.body.classList.contains('dark-mode')) {
+      themeBtn.title = i18n[currentLang].themeLight;
+    } else {
+      themeBtn.title = i18n[currentLang].themeDark;
+    }
+
+    // Nếu đang mở một Unit, render lại để cập nhật text thông báo trống hoặc title
+    if (activeUnit) {
+      openUnit(activeUnit);
+    }
+  }
+
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    if (document.body.classList.contains('dark-mode')) {
+      themeBtn.innerText = '☀️';
+      themeBtn.title = i18n[currentLang].themeLight;
+    } else {
+      themeBtn.innerText = '🌙';
+      themeBtn.title = i18n[currentLang].themeDark;
+    }
+  }
+
+  // Chức năng Lightbox 
   function openLightbox(index) {
     currentImageIndex = index;
     updateLightboxContent();
@@ -486,18 +577,6 @@
     }
   });
 
-  function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const themeBtn = document.getElementById('theme-btn');
-    if (document.body.classList.contains('dark-mode')) {
-      themeBtn.innerText = '☀️';
-      themeBtn.title = 'Chuyển sang nền Sáng';
-    } else {
-      themeBtn.innerText = '🌙';
-      themeBtn.title = 'Chuyển sang nền Tối';
-    }
-  }
-
   window.onscroll = function() {
     if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
       backToTopBtn.style.display = "block";
@@ -510,6 +589,7 @@
     window.scrollTo({top: 0, behavior: 'smooth'});
   }
 
+  // Khởi tạo ban đầu
   initMenu();
 </script>
 
